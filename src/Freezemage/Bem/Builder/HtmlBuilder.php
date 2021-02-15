@@ -5,25 +5,28 @@
 namespace Freezemage\Bem\Builder;
 
 
+use Freezemage\Bem\Config;
+use Freezemage\Bem\Node\AttributableNode;
 use Freezemage\Bem\Node\Block;
 use Freezemage\Bem\Node\Element;
 use Freezemage\Bem\Node\ModifiableNode;
-use Freezemage\Bem\Node\Modifier;
 use Freezemage\Bem\Node\Node;
-use InvalidArgumentException;
 use LogicException;
 
 
 class HtmlBuilder implements NodeBuilder {
     protected ClassNameBuilder $classNameBuilder;
+    protected Config $config;
     protected int $indentation;
 
     /**
      * HtmlBuilder constructor.
      * @param ClassNameBuilder $classNameBuilder
+     * @param Config $config
      */
-    public function __construct(ClassNameBuilder $classNameBuilder) {
+    public function __construct(ClassNameBuilder $classNameBuilder, Config $config) {
         $this->classNameBuilder = $classNameBuilder;
+        $this->config = $config;
         $this->indentation = 0;
     }
 
@@ -62,23 +65,30 @@ class HtmlBuilder implements NodeBuilder {
         $closeTag = $this->closeTag($node);
 
         if (!isset($content)) {
-            throw new LogicException('пися жопа нихуя не работает!!!');
+            throw new LogicException('Unable to build html node.');
         }
 
         return $openTag . $content . $closeTag;
     }
 
     protected function openTag(Node $node): string {
+        $template = $node->hasName() ? '%s<%s class="%s"' : '%s<%s';
+
         $tag = sprintf(
-                '%s<%s class="%s">%s',
+                $template,
                 $this->indent(),
                 $node->getTag(),
                 $this->buildTagClassName($node),
-                PHP_EOL
         );
 
+        if ($node instanceof AttributableNode) {
+            $tag .= $this->buildAttributes($node);
+        }
+
+        $tag .= '>';
+
         $this->indentation += 1;
-        return $tag;
+        return $tag . PHP_EOL;
     }
 
     protected function closeTag(Node $node): string {
@@ -87,10 +97,6 @@ class HtmlBuilder implements NodeBuilder {
     }
 
     protected function buildTagClassName(Node $node) {
-        if ($node instanceof Modifier) {
-            throw new InvalidArgumentException('Убери гавно свое анхуй');
-        }
-
         $tagClassName = $this->classNameBuilder->build($node);
 
         if (!($node instanceof ModifiableNode)) {
@@ -105,7 +111,18 @@ class HtmlBuilder implements NodeBuilder {
         return $tagClassName;
     }
 
+    protected function buildAttributes(AttributableNode $node): string {
+        $attributes = $node->getAttributes()->toArray();
+
+        $result = array();
+        foreach ($attributes as $attribute) {
+            $result[] = sprintf('%s="%s"', $attribute->getName(), $attribute->getValue());
+        }
+
+        return implode(' ', $result);
+    }
+
     protected function indent(): string {
-        return str_repeat("\t", $this->indentation);
+        return str_repeat($this->config->getIndentationCharacter(), $this->indentation);
     }
 }

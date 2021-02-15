@@ -12,9 +12,15 @@ interface Node {
 
     public function setParent(Node $node): void;
 
+    public function hasChildren(): bool;
+
+    public function getChildren(): NodeCollection;
+
     public function getTag(): string;
 
-    public function getName(): string;
+    public function getName(): ?string;
+
+    public function hasName(): bool;
 
     public function setContent(string $content): void;
 

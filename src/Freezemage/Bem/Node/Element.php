@@ -4,19 +4,21 @@
 
 namespace Freezemage\Bem\Node;
 
-class Element implements ModifiableNode {
+class Element implements ModifiableNode, AttributableNode {
     protected string $tag;
-    protected string $name;
+    protected ?string $name;
     protected string $content;
     protected Node $parent;
     protected NodeCollection $elements;
     protected NodeCollection $modifiers;
+    protected AttributeCollection $attributes;
 
-    public function __construct(string $tag, string $name) {
+    public function __construct(string $tag, ?string $name = null) {
         $this->tag = $tag;
         $this->name = $name;
         $this->elements = new NodeCollection();
         $this->modifiers = new NodeCollection();
+        $this->attributes = new AttributeCollection();
     }
 
     public function hasParent(): bool {
@@ -35,7 +37,7 @@ class Element implements ModifiableNode {
         return $this->tag;
     }
 
-    public function getName(): string {
+    public function getName(): ?string {
         return $this->name;
     }
 
@@ -57,6 +59,14 @@ class Element implements ModifiableNode {
         return $this->modifiers;
     }
 
+    public function attachAttribute(Attribute $attribute): void {
+        $this->attributes->add($attribute);
+    }
+
+    public function getAttributes(): AttributeCollection {
+        return $this->attributes;
+    }
+
     public function setContent(string $content): void {
         $this->content = $content;
     }
@@ -67,5 +77,17 @@ class Element implements ModifiableNode {
 
     public function hasContent(): bool {
         return isset($this->content);
+    }
+
+    public function hasName(): bool {
+        return isset($this->name);
+    }
+
+    public function hasChildren(): bool {
+        return !($this->elements->isEmpty() && $this->modifiers->isEmpty());
+    }
+
+    public function getChildren(): NodeCollection {
+        return $this->elements;
     }
 }

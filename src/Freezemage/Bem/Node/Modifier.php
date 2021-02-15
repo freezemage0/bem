@@ -4,13 +4,16 @@
 
 namespace Freezemage\Bem\Node;
 
+use LogicException;
+
+
 class Modifier implements Node {
     protected string $tag;
-    protected string $name;
+    protected ?string $name;
     protected string $content;
     protected Node $parent;
 
-    public function __construct(string $tag, string $name) {
+    public function __construct(string $tag, ?string $name = null) {
         $this->tag = $tag;
         $this->name = $name;
     }
@@ -45,5 +48,17 @@ class Modifier implements Node {
 
     public function hasContent(): bool {
         return isset($this->content);
+    }
+
+    public function hasName(): bool {
+        return isset($this->name);
+    }
+
+    public function hasChildren(): bool {
+        return false;
+    }
+
+    public function getChildren(): NodeCollection {
+        throw new LogicException('Modifiers cannot have child nodes.');
     }
 }

@@ -3,10 +3,15 @@
 
 
 use Freezemage\Bem\Builder\ClassNameBuilder;
+use Freezemage\Bem\Builder\CssBuilder;
 use Freezemage\Bem\Builder\HtmlBuilder;
 use Freezemage\Bem\Compiler;
-use Freezemage\Bem\Node\Block;
-use Freezemage\Bem\Snippet\CommentList;
+use Freezemage\Bem\Config;
+use Freezemage\Bem\Entity\Comment;
+use Freezemage\Bem\Node\Element;
+use Freezemage\Bem\Node\Modifier;
+use Freezemage\Bem\Node\NodeCollection;
+use Freezemage\Bem\Snippet\CommentSnippet;
 
 
 spl_autoload_register(function (string $fqn): void {
@@ -18,19 +23,22 @@ spl_autoload_register(function (string $fqn): void {
     }
 });
 
+/*$config = new Config(__DIR__ . '/asset/', __DIR__ . '/out/', "\t");
+
+
 $classNameBuilder = new ClassNameBuilder();
-$htmlBuilder = new HtmlBuilder($classNameBuilder);
+$htmlBuilder = new HtmlBuilder($classNameBuilder, $config);
+$cssBuilder = new CssBuilder($classNameBuilder);
 
-$head = new Block('head', '');
-$compiler = new Compiler($htmlBuilder, $head);
+$snippet = new CommentSnippet(new Comment('Administrator', 'My first comment!'));
+echo $cssBuilder->build($snippet->create()) . PHP_EOL;*/
 
-$snippet = new CommentList();
 
-$comments = array(
-        array('AUTHOR_NAME' => 'Administrator', 'MESSAGE' => 'My First Comment!'),
-        array('AUTHOR_NAME' => 'Moderator', 'MESSAGE' => 'Gratz!'),
-);
+$elements = new NodeCollection();
+$modifiers = new NodeCollection();
 
-$compiler->attach($snippet->create($comments));
+$elements->add(new Element('span'));
+$modifiers->add(new Modifier('ul'));
 
-file_put_contents(__DIR__ . '/out/comments.html', $compiler->compile());
+
+var_dump(NodeCollection::merge($elements, $modifiers));

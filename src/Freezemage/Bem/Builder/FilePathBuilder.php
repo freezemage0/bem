@@ -12,20 +12,20 @@ use Freezemage\Bem\Node\Node;
 use InvalidArgumentException;
 
 
-class ClassNameBuilder implements NodeBuilder {
+class FilePathBuilder implements NodeBuilder {
     public function build(Node $node): string {
         if ($node instanceof Block) {
-            return $node->hasName() ? $node->getName() : '';
+            return $node->getName() . '/';
         }
 
         if ($node instanceof Element) {
-            return $this->build($node->getParent()) . '__' . $node->getName();
+            return $this->build($node->getParent()) . '__' . $node->getName() . '/';
         }
 
         if ($node instanceof Modifier) {
-            return $this->build($node->getParent()) . '_' . $node->getName();
+            return $this->build($node->getParent()) . '_' . $node->getName() . '/';
         }
 
-        throw new InvalidArgumentException('Invalid node type.');
+        throw new InvalidArgumentException('Unexpected node type.');
     }
 }

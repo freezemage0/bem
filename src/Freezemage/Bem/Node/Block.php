@@ -4,26 +4,28 @@
 
 namespace Freezemage\Bem\Node;
 
-class Block implements ModifiableNode {
+class Block implements ModifiableNode, AttributableNode {
     protected string $tag;
-    protected string $name;
     protected string $content;
+    protected ?string $name;
     protected Node $parent;
     protected NodeCollection $blocks;
     protected NodeCollection $elements;
     protected NodeCollection $modifiers;
+    protected AttributeCollection $attributes;
 
     /**
      * Block constructor.
      * @param string $tag
-     * @param string $name
+     * @param string|null $name
      */
-    public function __construct(string $tag, string $name) {
+    public function __construct(string $tag, ?string $name = null) {
         $this->tag = $tag;
         $this->name = $name;
         $this->blocks = new NodeCollection();
         $this->elements = new NodeCollection();
         $this->modifiers = new NodeCollection();
+        $this->attributes = new AttributeCollection();
     }
 
     public function hasParent(): bool {
@@ -42,7 +44,7 @@ class Block implements ModifiableNode {
         return $this->tag;
     }
 
-    public function getName(): string {
+    public function getName(): ?string {
         return $this->name;
     }
 
@@ -73,6 +75,14 @@ class Block implements ModifiableNode {
         return $this->modifiers;
     }
 
+    public function attachAttribute(Attribute $attribute): void {
+        $this->attributes->add($attribute);
+    }
+
+    public function getAttributes(): AttributeCollection {
+        return $this->attributes;
+    }
+
     public function setContent(string $content): void {
         $this->content = $content;
     }
@@ -83,5 +93,17 @@ class Block implements ModifiableNode {
 
     public function hasContent(): bool {
         return isset($this->content);
+    }
+
+    public function hasName(): bool {
+        return isset($this->name);
+    }
+
+    public function hasChildren(): bool {
+        return !($this->elements->isEmpty() && $this->modifiers->isEmpty());
+    }
+
+    public function getChildren(): NodeCollection {
+
     }
 }

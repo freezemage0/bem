@@ -10,6 +10,18 @@ use SplObjectStorage;
 class NodeCollection {
     protected SplObjectStorage $collection;
 
+    public static function merge(NodeCollection ...$nodeCollections): NodeCollection {
+        $instance = new NodeCollection();
+
+        foreach ($nodeCollections as $collection) {
+            foreach ($collection->toArray() as $node) {
+                $instance->add($node);
+            }
+        }
+
+        return $instance;
+    }
+
     public function __construct() {
         $this->collection = new SplObjectStorage();
     }
@@ -34,5 +46,9 @@ class NodeCollection {
         }
 
         return $nodes;
+    }
+
+    public function isEmpty(): bool {
+        return $this->collection->count() > 0;
     }
 }
