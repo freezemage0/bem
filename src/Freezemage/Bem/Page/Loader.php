@@ -6,6 +6,7 @@ namespace Freezemage\Bem\Page;
 
 
 use Freezemage\Bem\Compiler;
+use Freezemage\Bem\Compiler\Directory;
 use Freezemage\Bem\Config;
 
 
@@ -19,11 +20,13 @@ class Loader {
     }
 
     public function load(string $page) {
-        $pagePath = $this->config->getAssetPath() . '/' . ltrim($page, '/');
+        $pagePath = Directory::normalizeFilePath($this->config->getAssetPath(), $page . '.php');
 
         if (is_file($pagePath)) {
             /** @noinspection PhpIncludeInspection */
             include $pagePath;
         }
+
+        return $this->compiler->compile($page);
     }
 }

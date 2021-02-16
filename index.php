@@ -17,6 +17,7 @@ use Freezemage\Bem\Node\Block;
 use Freezemage\Bem\Node\Element;
 use Freezemage\Bem\Node\Modifier;
 use Freezemage\Bem\Node\NodeCollection;
+use Freezemage\Bem\Page\Loader;
 use Freezemage\Bem\Snippet\CommentSnippet;
 
 
@@ -45,7 +46,5 @@ $compiler = new Compiler(
         $config
 );
 
-$snippet = new CommentSnippet(new Comment('Administrator', 'My first comment!'));
-$compiler->body()->attachBlock($snippet->create());
-
-print_r($compiler->compile('comment'));
+$loader = new Loader($config, $compiler);
+print_r($loader->load('comment'));
