@@ -4,10 +4,16 @@
 
 use Freezemage\Bem\Builder\ClassNameBuilder;
 use Freezemage\Bem\Builder\CssBuilder;
+use Freezemage\Bem\Builder\DefaultBuilderFactory;
+use Freezemage\Bem\Builder\FilePathBuilder;
 use Freezemage\Bem\Builder\HtmlBuilder;
+use Freezemage\Bem\Cache\CacheGenerator;
+use Freezemage\Bem\Cache\CacheValidator;
 use Freezemage\Bem\Compiler;
+use Freezemage\Bem\Compiler\CodeGenerator;
 use Freezemage\Bem\Config;
 use Freezemage\Bem\Entity\Comment;
+use Freezemage\Bem\Node\Block;
 use Freezemage\Bem\Node\Element;
 use Freezemage\Bem\Node\Modifier;
 use Freezemage\Bem\Node\NodeCollection;
@@ -23,22 +29,23 @@ spl_autoload_register(function (string $fqn): void {
     }
 });
 
-/*$config = new Config(__DIR__ . '/asset/', __DIR__ . '/out/', "\t");
+$config = new Config(
+        __DIR__ . '/asset/',
+        __DIR__ . '/out/',
+        "\t",
+        'js',
+        'css'
+);
 
-
-$classNameBuilder = new ClassNameBuilder();
-$htmlBuilder = new HtmlBuilder($classNameBuilder, $config);
-$cssBuilder = new CssBuilder($classNameBuilder);
+$compiler = new Compiler(
+        new DefaultBuilderFactory($config),
+        new CacheValidator($config),
+        new CacheGenerator($config),
+        new CodeGenerator($config),
+        $config
+);
 
 $snippet = new CommentSnippet(new Comment('Administrator', 'My first comment!'));
-echo $cssBuilder->build($snippet->create()) . PHP_EOL;*/
+$compiler->body()->attachBlock($snippet->create());
 
-
-$elements = new NodeCollection();
-$modifiers = new NodeCollection();
-
-$elements->add(new Element('span'));
-$modifiers->add(new Modifier('ul'));
-
-
-var_dump(NodeCollection::merge($elements, $modifiers));
+print_r($compiler->compile('comment'));

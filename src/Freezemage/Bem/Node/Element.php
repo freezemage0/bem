@@ -8,6 +8,7 @@ class Element implements ModifiableNode, AttributableNode {
     protected string $tag;
     protected ?string $name;
     protected string $content;
+    protected bool $enclosed;
     protected Node $parent;
     protected NodeCollection $elements;
     protected NodeCollection $modifiers;
@@ -16,6 +17,7 @@ class Element implements ModifiableNode, AttributableNode {
     public function __construct(string $tag, ?string $name = null) {
         $this->tag = $tag;
         $this->name = $name;
+        $this->enclosed = false;
         $this->elements = new NodeCollection();
         $this->modifiers = new NodeCollection();
         $this->attributes = new AttributeCollection();
@@ -84,10 +86,18 @@ class Element implements ModifiableNode, AttributableNode {
     }
 
     public function hasChildren(): bool {
-        return !($this->elements->isEmpty() && $this->modifiers->isEmpty());
+        return !$this->getChildren()->isEmpty();
     }
 
     public function getChildren(): NodeCollection {
         return $this->elements;
+    }
+
+    public function enclose(): void {
+        $this->enclosed = true;
+    }
+
+    public function isEnclosed(): bool {
+        return $this->enclosed;
     }
 }

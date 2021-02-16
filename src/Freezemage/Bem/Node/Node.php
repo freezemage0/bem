@@ -27,4 +27,8 @@ interface Node {
     public function getContent(): string;
 
     public function hasContent(): bool;
+
+    public function enclose(): void;
+
+    public function isEnclosed(): bool;
 }

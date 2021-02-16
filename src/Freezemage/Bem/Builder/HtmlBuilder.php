@@ -82,18 +82,21 @@ class HtmlBuilder implements NodeBuilder {
         );
 
         if ($node instanceof AttributableNode) {
-            $tag .= $this->buildAttributes($node);
+            $attributes = $this->buildAttributes($node);
+            $tag .= !empty($attributes) ? ' ' . $attributes : '';
         }
 
-        $tag .= '>';
+        if (!$node->isEnclosed()) {
+            $tag .= '>' . PHP_EOL;
+        }
 
         $this->indentation += 1;
-        return $tag . PHP_EOL;
+        return $tag;
     }
 
     protected function closeTag(Node $node): string {
         $this->indentation -= 1;
-        return sprintf('%s</%s>', PHP_EOL . $this->indent(), $node->getTag());
+        return $node->isEnclosed() ? '/>' : sprintf('%s</%s>', PHP_EOL . $this->indent(), $node->getTag());
     }
 
     protected function buildTagClassName(Node $node) {

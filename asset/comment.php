@@ -15,4 +15,4 @@ if (!($this instanceof Loader)) {
 $comment = new Comment('Administrator', 'My first comment!');
 $snippet = new CommentSnippet($comment);
 
-$this->compiler->body($snippet->create());
+$this->compiler->body()->attachBlock($snippet->create());

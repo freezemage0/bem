@@ -5,65 +5,108 @@
 namespace Freezemage\Bem;
 
 
-use Freezemage\Bem\Builder\ClassNameBuilder;
-use Freezemage\Bem\Builder\CssBuilder;
-use Freezemage\Bem\Builder\FilePathBuilder;
-use Freezemage\Bem\Builder\HtmlBuilder;
-use Freezemage\Bem\Compiler\StreamWriter;
+use Freezemage\Bem\Builder\BuilderFactory;
+use Freezemage\Bem\Cache\CacheGenerator;
+use Freezemage\Bem\Cache\CacheValidator;
+use Freezemage\Bem\Compiler\CodeGenerator;
+use Freezemage\Bem\Compiler\Directory;
 use Freezemage\Bem\Node\Attribute;
 use Freezemage\Bem\Node\Block;
-use Freezemage\Bem\Node\Element;
 use Freezemage\Bem\Node\Node;
+use Freezemage\Bem\Page\Structure;
 
 
 class Compiler {
     protected Block $document;
+    protected Block $head;
     protected Block $body;
     protected Config $config;
-    protected HtmlBuilder $htmlBuilder;
-    protected CssBuilder $cssBuilder;
-    protected FilePathBuilder $fileNameBuilder;
-    protected ClassNameBuilder $classNameBuilder;
+    protected BuilderFactory $builderFactory;
+    protected CacheValidator $cacheValidator;
+    protected CacheGenerator $cacheGenerator;
+    protected CodeGenerator $codeGenerator;
 
-    public function __construct(HtmlBuilder $htmlBuilder, Block $head) {
+    public function __construct(
+            BuilderFactory $builderFactory,
+            CacheValidator $cacheValidator,
+            CacheGenerator $cacheGenerator,
+            CodeGenerator $codeGenerator,
+            Config $config
+    ) {
+        $this->config = $config;
+
         $this->document = new Block('html');
         $this->document->attachAttribute(new Attribute('lang', 'en'));
-        $this->document->attachBlock($head);
-        $this->htmlBuilder = $htmlBuilder;
+
+        $this->head = new Block('head');
+        $this->body = new Block('body');
+
+        $this->document->attachBlock($this->head);
+        $this->document->attachBlock($this->body);
+
+        $this->builderFactory = $builderFactory;
+        $this->cacheValidator = $cacheValidator;
+        $this->cacheGenerator = $cacheGenerator;
+        $this->codeGenerator = $codeGenerator;
     }
 
-    public function body(Block $block): void {
-        if (!isset($this->body)) {
-            $this->body = new Block('body');
-            $this->document->attachBlock($this->body);
+    public function head(): Block {
+        return $this->head;
+    }
+
+    public function body(): Block {
+        return $this->body;
+    }
+
+    public function compile(string $templateName) {
+        $compiledNode = $this->compileNode($this->body);
+
+        $structure = new Structure($templateName, $compiledNode);
+        $this->createMissing($structure);
+
+        if (!$this->cacheValidator->validate($structure)) {
+            $this->cacheGenerator->generateCache($structure);
         }
 
-        $this->body->attachBlock($block);
+        $cache = $this->cacheGenerator->read($templateName);
+        $this->head()->attachElement($cache->getCssElement());
+        $this->body()->attachElement($cache->getJsElement());
+
+        return $this->builderFactory->getHtmlBuilder()->build($this->document);
     }
 
-    public function compile() {
-        $this->compileNode($this->body);
-    }
+    protected function compileNode(Node $node): array {
+        $nodes = array();
 
-    protected function compileNode(Node $node) {
-
-        $filePath = $this->config->getOutputPath() . '/' . ltrim($this->fileNameBuilder->build($node), '/');
-
-    }
-
-    protected function compileHtml(Node $node) {
-
-    }
-
-    protected function compileCss(Node $node): string {
-        $filePath = $this->config->getOutputPath() . '/' . ltrim($this->fileNameBuilder->build($node), '/');
-        if (!is_dir($filePath)) {
-            mkdir($filePath, 0777, true);
+        if ($node->hasChildren()) {
+            foreach ($node->getChildren()->toArray() as $child) {
+                $nodes = array_merge($nodes, $this->compileNode($child));
+            }
         }
 
-        $fileName = $filePath . $this->classNameBuilder->build($node) . '.css';
+        if ($node !== $this->body) {
+            $filePath = Directory::normalizeFilePath(
+                    $this->builderFactory->getFilePathBuilder()->build($node),
+                    $this->builderFactory->getClassNameBuilder()->build($node)
+            );
 
-        $stream = new StreamWriter($fileName);
-        $stream->write($this->cssBuilder->build($node));
+            $nodes[$filePath] = array(
+                    $this->config->getCssFormat() => $this->builderFactory->getCssBuilder()->build($node),
+                    $this->config->getJsFormat() => $this->builderFactory->getJsBuilder()->build($node)
+            );
+        }
+
+        return $nodes;
+    }
+
+    protected function createMissing(Structure $structure) {
+        foreach ($structure->getPageCollection() as $file => $data) {
+            foreach ($data as $type => $content) {
+                $filePath = Directory::normalizeFilePath($this->config->getOutputPath(), $file . '.' . $type);
+                if (!is_file($filePath)) {
+                    $this->codeGenerator->createFile($filePath, $content);
+                }
+            }
+        }
     }
 }

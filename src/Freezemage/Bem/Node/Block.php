@@ -8,6 +8,7 @@ class Block implements ModifiableNode, AttributableNode {
     protected string $tag;
     protected string $content;
     protected ?string $name;
+    protected bool $enclosed;
     protected Node $parent;
     protected NodeCollection $blocks;
     protected NodeCollection $elements;
@@ -22,6 +23,7 @@ class Block implements ModifiableNode, AttributableNode {
     public function __construct(string $tag, ?string $name = null) {
         $this->tag = $tag;
         $this->name = $name;
+        $this->enclosed = false;
         $this->blocks = new NodeCollection();
         $this->elements = new NodeCollection();
         $this->modifiers = new NodeCollection();
@@ -100,10 +102,18 @@ class Block implements ModifiableNode, AttributableNode {
     }
 
     public function hasChildren(): bool {
-        return !($this->elements->isEmpty() && $this->modifiers->isEmpty());
+        return !$this->getChildren()->isEmpty();
     }
 
     public function getChildren(): NodeCollection {
+        return NodeCollection::merge($this->blocks, $this->elements);
+    }
 
+    public function enclose(): void {
+        $this->enclosed = true;
+    }
+
+    public function isEnclosed(): bool {
+        return $this->enclosed;
     }
 }

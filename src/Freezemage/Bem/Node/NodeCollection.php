@@ -49,6 +49,6 @@ class NodeCollection {
     }
 
     public function isEmpty(): bool {
-        return $this->collection->count() > 0;
+        return $this->collection->count() == 0;
     }
 }

@@ -61,4 +61,12 @@ class Modifier implements Node {
     public function getChildren(): NodeCollection {
         throw new LogicException('Modifiers cannot have child nodes.');
     }
+
+    public function enclose(): void {
+        // noop
+    }
+
+    public function isEnclosed(): bool {
+        return false;
+    }
 }

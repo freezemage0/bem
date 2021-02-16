@@ -23,10 +23,6 @@ class CssBuilder implements NodeBuilder {
     }
 
     protected function buildSelectorChain(Node $node) {
-        if ($node->hasParent()) {
-            return ' .' . $this->build($node->getParent());
-        }
-
         return '.' . $this->classNameBuilder->build($node);
     }
 }
