@@ -6,6 +6,7 @@ namespace Freezemage\Bem\Page;
 
 
 use Freezemage\Bem\Compiler\Directory;
+use Freezemage\Bem\Compiler\OutputFile;
 
 
 class Structure {
@@ -30,29 +31,9 @@ class Structure {
     }
 
     /**
-     * @return array
+     * @return OutputFile[]
      */
     public function getPageCollection(): array {
         return $this->pageCollection;
-    }
-
-    public function getPageAssets(): array {
-        $assets = array();
-
-        foreach ($this->pageCollection as $file => $data) {
-            foreach ($data as $type => $content) {
-                $assets[] = $file . '.' . $type;
-            }
-        }
-
-        return $assets;
-    }
-
-    public function iterate(callable $callback): void {
-        foreach ($this->pageCollection as $file => $data) {
-            foreach ($data as $type => $content) {
-                call_user_func($callback, $file, $type, $content);
-            }
-        }
     }
 }

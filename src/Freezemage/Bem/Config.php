@@ -10,17 +10,20 @@ class Config {
     protected string $indentationCharacter;
     protected string $jsFormat;
     protected string $cssFormat;
+    protected string $cachePath;
 
     public function __construct(
             string $assetPath,
             string $outputPath,
+            string $cachePath,
             string $indentationCharacter,
             string $jsFormat,
             string $cssFormat
     ) {
         $this->assetPath = $assetPath;
-        $this->indentationCharacter = $indentationCharacter;
         $this->outputPath = $outputPath;
+        $this->cachePath = $cachePath;
+        $this->indentationCharacter = $indentationCharacter;
         $this->jsFormat = $jsFormat;
         $this->cssFormat = $cssFormat;
     }
@@ -31,6 +34,10 @@ class Config {
 
     public function getOutputPath(): string {
         return $this->outputPath;
+    }
+
+    public function getCachePath(): string {
+        return $this->cachePath;
     }
 
     public function getIndentationCharacter(): string {

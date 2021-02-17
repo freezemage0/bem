@@ -6,10 +6,16 @@ namespace Freezemage\Bem;
 
 
 use Freezemage\Bem\Builder\BuilderFactory;
+use Freezemage\Bem\Builder\DefaultBuilderFactory;
+use Freezemage\Bem\Cache\CacheFactory;
 use Freezemage\Bem\Cache\CacheGenerator;
 use Freezemage\Bem\Cache\CacheValidator;
+use Freezemage\Bem\Cache\DefaultCacheFactory;
 use Freezemage\Bem\Compiler\CodeGenerator;
-use Freezemage\Bem\Compiler\Directory;
+use Freezemage\Bem\Compiler\CssOutputFile;
+use Freezemage\Bem\Compiler\JsOutputFile;
+use Freezemage\Bem\Io\IoFactory;
+use Freezemage\Bem\Io\StreamFactory;
 use Freezemage\Bem\Node\Attribute;
 use Freezemage\Bem\Node\Block;
 use Freezemage\Bem\Node\Node;
@@ -22,14 +28,23 @@ class Compiler {
     protected Block $body;
     protected Config $config;
     protected BuilderFactory $builderFactory;
-    protected CacheValidator $cacheValidator;
-    protected CacheGenerator $cacheGenerator;
+    protected IoFactory $ioFactory;
+    protected CacheFactory $cacheFactory;
     protected CodeGenerator $codeGenerator;
+
+    public static function fromConfig(Config $config): Compiler {
+        $ioFactory = new StreamFactory();
+        $builderFactory = new DefaultBuilderFactory($config);
+        $cacheFactory = new DefaultCacheFactory($ioFactory, $config);
+        $codeGenerator = new CodeGenerator($ioFactory, $config);
+
+        return new Compiler($builderFactory, $ioFactory, $cacheFactory, $codeGenerator, $config);
+    }
 
     public function __construct(
             BuilderFactory $builderFactory,
-            CacheValidator $cacheValidator,
-            CacheGenerator $cacheGenerator,
+            IoFactory $ioFactory,
+            CacheFactory $cacheFactory,
             CodeGenerator $codeGenerator,
             Config $config
     ) {
@@ -45,8 +60,8 @@ class Compiler {
         $this->document->attachBlock($this->body);
 
         $this->builderFactory = $builderFactory;
-        $this->cacheValidator = $cacheValidator;
-        $this->cacheGenerator = $cacheGenerator;
+        $this->ioFactory = $ioFactory;
+        $this->cacheFactory = $cacheFactory;
         $this->codeGenerator = $codeGenerator;
     }
 
@@ -62,13 +77,13 @@ class Compiler {
         $compiledNode = $this->compileNode($this->body);
 
         $structure = new Structure($templateName, $compiledNode);
-        $this->createMissing($structure);
+        $this->codeGenerator->createMissing($structure);
 
-        if (!$this->cacheValidator->validate($structure)) {
-            $this->cacheGenerator->generateCache($structure);
+        if (!$this->cacheFactory->getValidator()->validate($structure)) {
+            $this->cacheFactory->getGenerator()->generateCache($structure);
         }
 
-        $cache = $this->cacheGenerator->read($templateName);
+        $cache = $this->cacheFactory->getGenerator()->read($templateName);
         $this->head()->attachElement($cache->getCssElement());
         $this->body()->attachElement($cache->getJsElement());
 
@@ -85,28 +100,16 @@ class Compiler {
         }
 
         if ($node !== $this->body) {
-            $filePath = Directory::normalizeFilePath(
-                    $this->builderFactory->getFilePathBuilder()->build($node),
-                    $this->builderFactory->getClassNameBuilder()->build($node)
-            );
+            $directory = new Io\Directory($this->builderFactory->getFilePathBuilder()->build($node));
+            $filePath = $directory->normalizeFilePath($this->builderFactory->getClassNameBuilder()->build($node));
 
-            $nodes[$filePath] = array(
-                    $this->config->getCssFormat() => $this->builderFactory->getCssBuilder()->build($node),
-                    $this->config->getJsFormat() => $this->builderFactory->getJsBuilder()->build($node)
-            );
+            $cssBuilder = $this->builderFactory->getCssBuilder();
+            $jsBuilder = $this->builderFactory->getJsBuilder();
+
+            $nodes[] = new CssOutputFile($this->config->getCssFormat(), $filePath, $cssBuilder->build($node));
+            $nodes[] = new JsOutputFile($this->config->getJsFormat(), $filePath, $jsBuilder->build($node));
         }
 
         return $nodes;
-    }
-
-    protected function createMissing(Structure $structure) {
-        foreach ($structure->getPageCollection() as $file => $data) {
-            foreach ($data as $type => $content) {
-                $filePath = Directory::normalizeFilePath($this->config->getOutputPath(), $file . '.' . $type);
-                if (!is_file($filePath)) {
-                    $this->codeGenerator->createFile($filePath, $content);
-                }
-            }
-        }
     }
 }

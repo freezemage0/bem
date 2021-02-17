@@ -5,30 +5,31 @@
 namespace Freezemage\Bem\Cache;
 
 
-use DirectoryIterator;
-use Freezemage\Bem\Compiler\Directory;
-use Freezemage\Bem\Compiler\StreamReader;
 use Freezemage\Bem\Config;
-use Freezemage\Bem\Node\Node;
+use Freezemage\Bem\Io\Directory;
+use Freezemage\Bem\Io\IoFactory;
 use Freezemage\Bem\Page\Structure;
 
 
 class CacheValidator {
     protected Config $config;
+    protected IoFactory $io;
 
     /**
      * CacheValidator constructor.
+     * @param IoFactory $io
      * @param Config $config
      */
-    public function __construct(Config $config) {
+    public function __construct(IoFactory $io, Config $config) {
+        $this->io = $io;
         $this->config = $config;
     }
 
     public function validate(Structure $structure): bool {
-        $cacheFile = Directory::normalizeFilePath(
-                $this->config->getOutputPath(),
-                $structure->getPageName() . '/main.cache'
-        );
+        $outputDir = new Directory($this->config->getOutputPath());
+        $cacheDir = new Directory($this->config->getCachePath());
+
+        $cacheFile = $cacheDir->normalizeFilePath($structure->getPageName() . '/main.cache');
 
         if (!is_file($cacheFile)) {
             return false;
@@ -37,9 +38,9 @@ class CacheValidator {
         /** @noinspection PhpIncludeInspection */
         $cache = include $cacheFile;
 
-        foreach ($structure->getPageAssets() as $file) {
-            $filePath = Directory::normalizeFilePath($this->config->getOutputPath(), $file);
-            $reader = new StreamReader($filePath);
+        foreach ($structure->getPageCollection() as $file) {
+            $filePath = $outputDir->normalizeFilePath($file->getPath() . '.' . $file->getFormat());
+            $reader = $this->io->createReader()->open($filePath);
 
             $hash = $this->getHash($reader->toString());
             if ($hash != $cache[$filePath]) {
