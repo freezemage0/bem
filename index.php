@@ -1,20 +1,16 @@
 <?php
 /** @author Demyan Seleznev <seleznev@intervolga.ru> */
 
+require __DIR__ . '/src/Freezemage/Bem/ClassLoader.php';
 
+
+use Freezemage\Bem\ClassLoader;
 use Freezemage\Bem\Compiler;
 use Freezemage\Bem\Config;
 use Freezemage\Bem\Page\Loader;
 
 
-spl_autoload_register(function (string $fqn): void {
-    $fqn = str_replace('\\', '/', ltrim($fqn, '/'));
-    $absolute = realpath(__DIR__ . '/src') . '/' . $fqn . '.php';
-    if (is_file($absolute)) {
-        /** @noinspection PhpIncludeInspection */
-        include $absolute;
-    }
-});
+ClassLoader::register();
 
 $config = new Config(
         'asset/',
