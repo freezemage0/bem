@@ -8,8 +8,6 @@ namespace Freezemage\Bem;
 use Freezemage\Bem\Builder\BuilderFactory;
 use Freezemage\Bem\Builder\DefaultBuilderFactory;
 use Freezemage\Bem\Cache\CacheFactory;
-use Freezemage\Bem\Cache\CacheGenerator;
-use Freezemage\Bem\Cache\CacheValidator;
 use Freezemage\Bem\Cache\DefaultCacheFactory;
 use Freezemage\Bem\Compiler\CodeGenerator;
 use Freezemage\Bem\Compiler\CssOutputFile;
@@ -18,6 +16,7 @@ use Freezemage\Bem\Io\IoFactory;
 use Freezemage\Bem\Io\StreamFactory;
 use Freezemage\Bem\Node\Attribute;
 use Freezemage\Bem\Node\Block;
+use Freezemage\Bem\Node\Element;
 use Freezemage\Bem\Node\Node;
 use Freezemage\Bem\Page\Structure;
 
@@ -71,6 +70,26 @@ class Compiler {
 
     public function body(): Block {
         return $this->body;
+    }
+
+    public function css(string $path): self {
+        $css = new Element('link');
+        $css->attachAttribute(new Attribute('rel', 'stylesheet'));
+        $css->attachAttribute(new Attribute('href', $path));
+        $css->enclose();
+
+        $this->head()->attachElement($css);
+
+        return $this;
+    }
+
+    public function js(string $path): self {
+        $js = new Element('script');
+        $js->attachAttribute(new Attribute('src', $path));
+
+        $this->body()->attachElement($js);
+
+        return $this;
     }
 
     public function compile(string $templateName) {

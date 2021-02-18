@@ -16,7 +16,7 @@ $config = new Config(
         'asset/',
         'out/',
         'cache/',
-        "\t",
+        "    ",
         'js',
         'css'
 );
@@ -24,4 +24,4 @@ $config = new Config(
 $compiler = Compiler::fromConfig($config);
 
 $loader = new Loader($config, $compiler);
-print_r($loader->load('page'));
+print_r($loader->load('tenor'));

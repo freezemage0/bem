@@ -43,18 +43,22 @@ class Element implements ModifiableNode, AttributableNode {
         return $this->name;
     }
 
-    public function attachElement(Element $element): void {
+    public function attachElement(Element $element): self {
         $this->elements->add($element);
         $element->setParent($this->getParent());
+
+        return $this;
     }
 
     public function getElements(): NodeCollection {
         return $this->elements;
     }
 
-    public function attachModifier(Modifier $modifier): void {
+    public function attachModifier(Modifier $modifier): self {
         $this->modifiers->add($modifier);
         $modifier->setParent($this);
+
+        return $this;
     }
 
     public function getModifiers(): NodeCollection {

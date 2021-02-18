@@ -41,10 +41,10 @@ class HtmlBuilder implements NodeBuilder {
 
             $content = array();
             foreach ($children as $child) {
-                $content[] = $this->build($child);
+                $content[] = $this->build($child) . PHP_EOL;
             }
 
-            $content = implode(PHP_EOL, $content);
+            $content = implode('', $content);
         }
 
         if ($node instanceof Element) {
@@ -56,10 +56,10 @@ class HtmlBuilder implements NodeBuilder {
             }
 
             if ($node->hasContent()) {
-                $content[] = $this->indent() . $node->getContent();
+                $content[] = $node->getContent();
             }
 
-            $content = implode(PHP_EOL, $content);
+            $content = implode('', $content);
         }
 
         $closeTag = $this->closeTag($node);
@@ -87,7 +87,10 @@ class HtmlBuilder implements NodeBuilder {
         }
 
         if (!$node->isEnclosed()) {
-            $tag .= '>' . PHP_EOL;
+            $tag .= '>';
+            if (!$node->hasContent()) {
+                $tag .= PHP_EOL;
+            }
         }
 
         $this->indentation += 1;
@@ -96,7 +99,16 @@ class HtmlBuilder implements NodeBuilder {
 
     protected function closeTag(Node $node): string {
         $this->indentation -= 1;
-        return $node->isEnclosed() ? '/>' : sprintf('%s</%s>', PHP_EOL . $this->indent(), $node->getTag());
+        if ($node->isEnclosed()) {
+            return '/>';
+        }
+
+        $tag = sprintf('</%s>', $node->getTag());
+        if (!$node->hasContent()) {
+            $tag = $this->indent() . $tag;
+        }
+
+        return $tag;
     }
 
     protected function buildTagClassName(Node $node) {

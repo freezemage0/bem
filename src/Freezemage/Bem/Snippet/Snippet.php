@@ -4,6 +4,7 @@
 
 namespace Freezemage\Bem\Snippet;
 
+
 use Freezemage\Bem\Node\Block;
 
 

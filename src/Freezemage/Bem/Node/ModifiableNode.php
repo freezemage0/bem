@@ -6,7 +6,7 @@ namespace Freezemage\Bem\Node;
 
 
 interface ModifiableNode extends Node {
-    public function attachModifier(Modifier $modifier): void;
+    public function attachModifier(Modifier $modifier): self;
 
     public function getModifiers(): NodeCollection;
 }
