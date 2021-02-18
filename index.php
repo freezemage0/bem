@@ -17,9 +17,9 @@ spl_autoload_register(function (string $fqn): void {
 });
 
 $config = new Config(
-        __DIR__ . '/asset/',
-        __DIR__ . '/out/',
-        __DIR__ . '/cache/',
+        'asset/',
+        'out/',
+        'cache/',
         "\t",
         'js',
         'css'
@@ -28,4 +28,4 @@ $config = new Config(
 $compiler = Compiler::fromConfig($config);
 
 $loader = new Loader($config, $compiler);
-print_r($loader->load('comment'));
+print_r($loader->load('page'));

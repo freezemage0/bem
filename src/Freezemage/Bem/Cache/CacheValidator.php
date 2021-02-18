@@ -43,7 +43,7 @@ class CacheValidator {
             $reader = $this->io->createReader()->open($filePath);
 
             $hash = $this->getHash($reader->toString());
-            if ($hash != $cache[$filePath]) {
+            if (!isset($cache[$filePath]) || $hash != $cache[$filePath]) {
                 return false;
             }
         }

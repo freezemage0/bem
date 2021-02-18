@@ -6,7 +6,8 @@ namespace Freezemage\Bem\Page;
 
 
 use Freezemage\Bem\Compiler;
-use Freezemage\Bem\Compiler\Directory;
+use Freezemage\Bem\Exception\AssetNotFoundException;
+use Freezemage\Bem\Io\Directory;
 use Freezemage\Bem\Config;
 
 
@@ -20,12 +21,15 @@ class Loader {
     }
 
     public function load(string $page) {
-        $pagePath = Directory::normalizeFilePath($this->config->getAssetPath(), $page . '.php');
+        $pageDirPath = new Directory($this->config->getAssetPath());
+        $pageFilePath = $pageDirPath->normalizeFilePath($page . '.php');
 
-        if (is_file($pagePath)) {
-            /** @noinspection PhpIncludeInspection */
-            include $pagePath;
+        if (!is_file($pageFilePath)) {
+            throw AssetNotFoundException::create($this->config->getAssetPath(), $pageFilePath);
         }
+
+        /** @noinspection PhpIncludeInspection */
+        include $pageFilePath;
 
         return $this->compiler->compile($page);
     }
