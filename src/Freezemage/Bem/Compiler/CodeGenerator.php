@@ -1,5 +1,5 @@
 <?php
-/** @author Demyan Seleznev <seleznev@intervolga.ru> */
+/** @author V. M. <freezemage0@gmail.com> */
 
 
 namespace Freezemage\Bem\Compiler;
@@ -7,6 +7,7 @@ namespace Freezemage\Bem\Compiler;
 
 use Freezemage\Bem\Config;
 use Freezemage\Bem\Io\IoFactory;
+use Freezemage\Bem\Io\Directory;
 use Freezemage\Bem\Page\Structure;
 
 
@@ -20,12 +21,13 @@ class CodeGenerator implements OutputFileVisitor {
     }
 
     public function createFile(string $fileName, string $content) {
-        $directory = new \Freezemage\Bem\Io\Directory(dirname($fileName));
+        $directory = new Directory(dirname($fileName));
         if (!$directory->exists()) {
             $directory->create();
         }
 
-        $file = $this->io->createWriter()->open($directory->normalizeFilePath(basename($fileName))); // сам написал, сам хакнул
+        $filePath = $directory->normalizeFilePath(basename($fileName)); // сам написал, сам хакнул
+        $file = $this->io->createWriter()->open($filePath);
         $file->write($content);
     }
 
@@ -44,7 +46,7 @@ class CodeGenerator implements OutputFileVisitor {
     }
 
     protected function processFile(OutputFile $outputFile) {
-        $outputDir = new \Freezemage\Bem\Io\Directory($this->config->getOutputPath());
+        $outputDir = new Directory($this->config->getOutputPath());
 
         $file = $outputDir->normalizeFilePath($outputFile->getPath() . '.' . $outputFile->getFormat());
         if (!is_file($file)) {

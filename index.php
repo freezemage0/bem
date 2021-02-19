@@ -1,5 +1,5 @@
 <?php
-/** @author Demyan Seleznev <seleznev@intervolga.ru> */
+/** @author V. M. <freezemage0@gmail.com> */
 
 require __DIR__ . '/src/Freezemage/Bem/ClassLoader.php';
 
